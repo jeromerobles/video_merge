@@ -4,6 +4,9 @@ REM Pre-processing
 REM --renames files, adding leading zeros
 @echo on
 
+::specify the ffmpeg.exe file including full path here
+set "%FFMPEGFILE%=C:\ffmpeg.exe"
+
 @echo off
 setlocal enabledelayedexpansion
 
@@ -123,7 +126,7 @@ set "command_file=list.txt"
 rem Use ffmpeg to concatenate all MP4 files
 for /f "tokens=*" %%i in (%command_file%) do (
     echo Running script for file: %%i
-    call C:\home_shared\movies\ffmpeg.exe %%i-filter_complex "[0:v][0:a][1:v][1:a]concat=n=%FILE_COUNT%:v=1:a=1[vout][aout]" -map "[vout]" -map "[aout]" -c:v libx264 -c:a aac -strict experimental "%output_file%"
+    call %FFMPEGFILE% %%i-filter_complex "[0:v][0:a][1:v][1:a]concat=n=%FILE_COUNT%:v=1:a=1[vout][aout]" -map "[vout]" -map "[aout]" -c:v libx264 -c:a aac -strict experimental "%output_file%"
 )
 
 if exist "0000.mp4" (
