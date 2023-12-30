@@ -5,7 +5,7 @@ REM --renames files, adding leading zeros
 @echo on
 
 ::specify the ffmpeg.exe file including full path here
-set "%FFMPEGFILE%=C:\ffmpeg.exe"
+set "FFMPEGFILE=C:\ffmpeg.exe"
 
 @echo off
 setlocal enabledelayedexpansion
