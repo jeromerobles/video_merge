@@ -5,7 +5,7 @@ REM --renames files, adding leading zeros
 @echo on
 
 ::specify the ffmpeg.exe file including full path here
-set "FFMPEGFILE=C:\ffmpeg.exe"
+set "FFMPEGFILE=C:\home_shared\movies\ffmpeg.exe"
 
 @echo off
 setlocal enabledelayedexpansion
@@ -14,10 +14,11 @@ setlocal enabledelayedexpansion
 @echo off
 Echo.
 set /p yourfolder="Input the path to the movie folder: "
+set /p FILELIM="Input the number of files to process at a time: "
 Echo.
 
 Echo User specified: %yourfolder%
-
+Echo This will process: %FILELIM% files at a time
 
 ::For /f %%c in ('echo %yourfolder%') do set upath=%%c
 
@@ -33,7 +34,7 @@ if exist "temp.mp4" (
    del temp.mp4
 )
 if exist "filelist.txt" (
-   del ilelist.txt
+   del filelist.txt
 )
 if exist "list.txt" (
    del list.txt
@@ -99,13 +100,14 @@ set /a counter = 0
 
 for %%a in ("*.mp4") do (
     
-    if !counter! lss 5  (
+    if !counter! lss %FILELIM%  (
         set /a counter += 1
         echo %%~nxa>>"%FILELIST%"
         echo File !counter!: %%~nxa
 		
     
 ))
+
 
 REM Add "-i" before each mp4 file in the list and save it to the modified file list
 (for /f "delims=" %%i in (%FILELIST%) do (
@@ -123,14 +125,25 @@ ren %MODIFIED_FILELIST% list.txt
 
 set "output_file=temp.mp4"
 set "command_file=list.txt"
-rem Use ffmpeg to concatenate all MP4 files
+:: create input filters
+set "input_filters="
+set /a file_index=%FILE_COUNT% -1
+for /l %%i in (0, 1, %file_index%) do (
+    
+    set "input_filters=!input_filters![%%i:v][%%i:a]"
+)
+:: Use ffmpeg to concatenate all MP4 files
+
 for /f "tokens=*" %%i in (%command_file%) do (
     echo Running script for file: %%i
-    call %FFMPEGFILE% %%i-filter_complex "[0:v][0:a][1:v][1:a]concat=n=%FILE_COUNT%:v=1:a=1[vout][aout]" -map "[vout]" -map "[aout]" -c:v libx264 -c:a aac -strict experimental "%output_file%"
+    call %FFMPEGFILE% %%i-filter_complex "%input_filters%concat=n=%FILE_COUNT%:v=1:a=1[vout][aout]" -map "[vout]" -map "[aout]" -c:v libx264 -c:a aac -strict experimental "%output_file%"
 )
 
+:: del 0000.mp4 and replace with temp.mp4
 if exist "0000.mp4" (
-   del 0000.mp4
+   if exist "temp.mp4" (
+       del 0000.mp4
+	)
    
 )
 rename temp.mp4 0000.mp4
